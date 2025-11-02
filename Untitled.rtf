@@ -4,7 +4,7 @@
 \red252\green9\blue7;}
 {\*\expandedcolortbl;;\cssrgb\c0\c1\c1;\cssrgb\c54133\c87606\c27652;\cssrgb\c100000\c100000\c0;
 \cssrgb\c100000\c15764\c0;}
-\paperw11900\paperh16840\margl1440\margr1440\vieww38200\viewh21600\viewkind0
+\paperw11900\paperh16840\margl1440\margr1440\vieww28300\viewh17700\viewkind0
 \pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
 
 \f0\b\fs62 \cf2 SQL Practice Questions:
@@ -143,6 +143,93 @@ ROUND(AVG(stars), 2) AS avg_stars\
 FROM reviews\
 GROUP BY mth, product_id\
 ORDER BY mth, product_id;\
+\
+\
+\cf3 11. Companies often perform salary analyses to ensure fair compensation practices. One useful analysis is to check if there are any employees earning more than their direct managers.\
+\cf4 \
+As a HR Analyst, you're asked to identify all employees who earn more than their direct managers. The result should include the employee's ID and name.\
+\
+SELECT \
+\
+emp.employee_id AS employee_id,\
+emp.name AS employee_name\
+\
+FROM employee AS mgr\
+\
+INNER JOIN employee AS emp\
+ON emp.manager_id = mgr.employee_id\
+\
+WHERE emp.salary > mgr.salary;\
+\
+\
+\cf3 12. Given a table containing information about bank deposits and withdrawals made using Paypal, write a query to retrieve the final account balance for each account, taking into account all the transactions recorded in the table with the assumption that there are no missing transactions.\
+\cf4 \
+SELECT account_id,\
+SUM(\
+\
+CASE \
+WHEN transaction_type = 'Deposit' THEN amount\
+ELSE -amount\
+END )\
+\
+AS final_balance\
+FROM transactions\
+GROUP BY account_id;\
+\
+\
+\cf3 13. Assume you have an events table on Facebook app analytics. Write a query to calculate the click-through rate (CTR) for the app in 2022 and round the results to 2 decimal places.\
+\cf4 \
+\cf3 Definition and note:\
+\
+Percentage of click-through rate (CTR) = 100.0 * Number of clicks / Number of impressions\
+To avoid integer division, multiply the CTR by 100.0, not 100.\
+\cf4 \
+\cf5 Step 1: Filter for analytics events from year 2022\
+\
+Next, find the number of clicks and impressions using the CASE statement to assign a value of 1 for 'click' events and 0 for other events\
+\
+Then, we add up the clicks and impressions by wrapping the CASE statements with a SUM() aggregate function and group the results by app_id\
+\
+Finally, calculate the percentage of click-through rate (CTR) by dividing the number of clicks by the number of impressions and multiplying by 100.0, rounded to 2 decimal places using the ROUND() function.\
+\cf4 \
+SELECT \
+\
+app_id,\
+ROUND(\
+\
+100.00 *\
+SUM(CASE WHEN event_type = 'click' THEN 1 ELSE 0 END) /\
+SUM(CASE WHEN event_type = 'impression' THEN 1 ELSE 0 END), 2)\
+\
+AS ctr \
+\
+FROM events\
+\
+WHERE\
+timestamp >= '2022-01-01'\
+AND\
+timestamp <= '2022-12-31'\
+\
+GROUP BY app_id;\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
 \
 \
 \
