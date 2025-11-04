@@ -4,7 +4,7 @@
 \red252\green9\blue7;}
 {\*\expandedcolortbl;;\cssrgb\c0\c1\c1;\cssrgb\c54133\c87606\c27652;\cssrgb\c100000\c100000\c0;
 \cssrgb\c100000\c15764\c0;}
-\paperw11900\paperh16840\margl1440\margr1440\vieww28300\viewh17700\viewkind0
+\paperw11900\paperh16840\margl1440\margr1440\vieww28600\viewh18000\viewkind0
 \pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
 
 \f0\b\fs62 \cf2 SQL Practice Questions:
@@ -212,6 +212,106 @@ timestamp <= '2022-12-31'\
 \
 GROUP BY app_id;\
 \
+\
+\cf3 14. Assume you're given tables with information about TikTok user sign-ups and confirmations through email and text. New users on TikTok sign up using their email addresses, and upon sign-up, each user receives a text message confirmation to activate their account.\
+\
+Write a query to display the user IDs of those who did not confirm their sign-up on the first day, but confirmed on the second day.\
+\cf4 \
+SELECT DISTINCT emails.user_id \
+FROM emails\
+INNER JOIN texts\
+ON emails.email_id = texts.email_id\
+WHERE texts.action_date = emails.signup_date + INTERVAL '1 day'\
+AND texts.signup_action = 'Confirmed';\
+\
+\
+\cf3 15. IBM is analyzing how their employees are utilizing the Db2 database by tracking the SQL queries executed by their employees. The objective is to generate data to populate a histogram that shows the number of unique queries run by employees during the third quarter of 2023 (July to September). Additionally, it should count the number of employees who did not run any queries during this period.\
+\
+Display the number of unique queries as histogram categories, along with the count of employees who executed that number of unique queries.\
+\cf4 \
+\cf5 Step 1: Identify Queries in the Third Quarter of 2023\
+First, we need to filter the queries table to include only those queries executed between July 1, 2023, and September 30, 2023. We use these dates because they correspond to the third quarter of the year.\
+\
+Using the COUNT() function, we also count the number of unique queries per employee within this time frame.\
+\
+Step 2: Ensure All Employees are Counted\
+Next, we need to ensure that all employees are included, even if they did not run any queries during the third quarter. Using the same query in Step 1, we'll use a LEFT JOIN to achieve this, combining the employees table with the results from Step 1.\
+\
+We'll also use COALESCE() function to set the query count to 0 for employees with no queries.\
+\
+Step 3: Count Employees by Unique Query Count\
+Finally, in the main query, we group the results by the number of unique queries and count how many employees fall into each group. We also order the results by the number of unique queries to generate the histogram.\
+\cf4 \
+WITH employee_queries AS(\
+\
+SELECT e.employee_id,\
+COALESCE(COUNT(DISTINCT q.query_id), 0) AS unique_queries\
+FROM employees AS e \
+LEFT JOIN queries AS q\
+ON e.employee_id = q.employee_id\
+AND q.query_starttime >= '2023-07-01'\
+AND q.query_starttime < '2023-10-01'\
+GROUP BY e.employee_id\
+)\
+\
+SELECT unique_queries, COUNT(employee_id) AS employee_count\
+FROM employee_queries\
+GROUP BY unique_queries\
+ORDER BY unique_queries;\
+\
+\
+\cf3 16. Your team at JPMorgan Chase is preparing to launch a new credit card, and to gain some insights, you're analyzing how many credit cards were issued each month.\
+\
+Write a query that outputs the name of each credit card and the difference in the number of issued cards between the month with the highest issuance cards and the lowest issuance. Arrange the results based on the largest disparity.\
+\cf4 \
+SELECT card_name, MAX(issued_amount) - MIN(issued_amount) AS difference\
+FROM monthly_cards_issued\
+group BY card_name\
+ORDER BY difference DESC;\
+\
+\
+\cf3 17. You're trying to find the mean number of items per order on Alibaba, rounded to 1 decimal place using tables which includes information on the count of items in each order (item_count table) and the corresponding number of orders for each item count (order_occurrences table).\
+\cf4 \
+SELECT ROUND(SUM(item_count::DECIMAL*order_occurrences)\
+/ SUM(order_occurrences), 1) AS mean\
+FROM items_per_order;\
+\
+\
+\cf3 18. CVS Health is trying to better understand its pharmacy sales, and how well different products are selling. Each drug can only be produced by one manufacturer.\
+\
+Write a query to find the top 3 most profitable drugs sold, and how much profit they made. Assume that there are no ties in the profits. Display the result from the highest to the lowest total profit.\
+\cf4 \
+SELECT drug, total_sales - cogs AS total_profit\
+FROM pharmacy_sales\
+ORDER BY total_profit DESC\
+LIMIT 3;\
+\
+\
+\cf3 19. CVS Health is analyzing its pharmacy sales data, and how well different products are selling in the market. Each drug is exclusively manufactured by a single manufacturer.\
+\
+Write a query to identify the manufacturers associated with the drugs that resulted in losses for CVS Health and calculate the total amount of losses incurred.\
+\
+Output the manufacturer's name, the number of drugs associated with losses, and the total losses in absolute value. Display the results sorted in descending order with the highest losses displayed at the top.\
+\cf4 \
+SELECT manufacturer,COUNT(drug) AS drug_count,\
+ABS(SUM(total_sales - cogs)) AS total_loss\
+FROM pharmacy_sales\
+WHERE total_sales - cogs <= 0\
+GROUP BY manufacturer\
+ORDER BY total_loss DESC;\
+\
+\
+\cf3 20. CVS Health wants to gain a clearer understanding of its pharmacy sales and the performance of various products.\
+\
+Write a query to calculate the total drug sales for each manufacturer. Round the answer to the nearest million and report your results in descending order of total sales. In case of any duplicates, sort them alphabetically by the manufacturer name.\
+\
+Since this data will be displayed on a dashboard viewed by business stakeholders, please format your results as follows: "$36 million".\
+\cf4 \
+SELECT manufacturer, \
+CONCAT('$', ROUND(SUM(total_sales)/1000000), ' million') AS sale\
+FROM pharmacy_sales\
+GROUP BY manufacturer\
+ORDER BY SUM(total_sales) DESC, manufacturer;\
 \
 \
 \
