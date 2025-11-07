@@ -7,7 +7,9 @@
 \paperw11900\paperh16840\margl1440\margr1440\vieww28600\viewh18000\viewkind0
 \pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
 
-\f0\b\fs62 \cf2 SQL Practice Questions:
+\f0\b\fs62 \cf2 SQL Practice Questions:\
+\
+EASY:
 \f1\b0\fs38 \cf0 \
 \
 \cf3 1. Assume you're given a table Twitter tweet data, write a query to obtain a histogram of tweets posted per user in 2022. Output the tweet count per user as the bucket and the number of Twitter users who fall into that bucket.\
@@ -312,6 +314,118 @@ CONCAT('$', ROUND(SUM(total_sales)/1000000), ' million') AS sale\
 FROM pharmacy_sales\
 GROUP BY manufacturer\
 ORDER BY SUM(total_sales) DESC, manufacturer;\
+\
+\
+\cf3 21. UnitedHealth Group (UHG) has a program called Advocate4Me, which allows policy holders (or, members) to call an advocate and receive support for their health care needs \'96 whether that's claims and benefits support, drug coverage, pre- and post-authorisation, medical records, emergency assistance, or member portal services.\
+\
+Write a query to find how many UHG policy holders made three, or more calls, assuming each call is identified by the case_id column.\
+\cf4 \
+WITH policy_count AS(\
+\
+SELECT policy_holder_id, COUNT(case_id) AS call_count\
+FROM callers\
+GROUP BY policy_holder_id\
+HAVING COUNT(case_id) >= 3\
+)\
+\
+SELECT COUNT(policy_holder_id)\
+FROM policy_count;\
+\
+\
+\
+
+\f0\b\fs62 \cf2 MEDIUM:\
+\
+
+\f1\b0\fs38 \cf3 1. Assume you are given the table below on Uber transactions made by users. Write a query to obtain the third transaction of every user. Output the user id, spend and transaction date.\
+\cf4 \
+WITH user_order AS(\
+\
+SELECT *, \
+ROW_NUMBER () OVER (\
+PARTITION BY user_id ORDER BY transaction_date) AS row_num\
+FROM transactions\
+)\
+\
+SELECT user_id, spend, transaction_date\
+FROM user_order\
+WHERE row_num =3;\
+\
+\
+\cf3 2. Imagine you're an HR analyst at a tech company tasked with analyzing employee salaries. Your manager is keen on understanding the pay distribution and asks you to determine the second highest salary among all employees.\
+\
+It's possible that multiple employees may share the same second highest salary. In case of duplicate, display the salary only once.\
+\cf4 \
+SELECT MAX(salary) AS second_highest_salary\
+FROM employee\
+WHERE salary < (\
+\
+SELECT MAX(salary)\
+FROM employee);\
+\
+\
+\cf3 3. Assume you're given tables with information on Snapchat users, including their ages and time spent sending and opening snaps.\
+\
+Write a query to obtain a breakdown of the time spent sending vs. opening snaps as a percentage of total time spent on these activities grouped by age group. Round the percentage to 2 decimal places in the output.\
+\
+Notes:\
+\
+Calculate the following percentages:\
+time spent sending / (Time spent sending + Time spent opening)\
+Time spent opening / (Time spent sending + Time spent opening)\
+To avoid integer division in percentages, multiply by 100.0 and not 100.\
+\cf4 \
+SELECT ag.age_bucket,\
+\
+ROUND(100.0 * \
+  SUM(act.time_spent) FILTER (WHERE act.activity_type = 'open') /\
+  SUM(act.time_spent), 2) AS open_perc,\
+\
+ROUND(100.0 * \
+  SUM(act.time_spent) FILTER (WHERE act.activity_type = 'send')/\
+  SUM(act.time_spent), 2) AS send_perc\
+\
+FROM activities act  \
+\
+INNER JOIN age_breakdown ag  \
+ON act.user_id = ag.user_id\
+\
+WHERE act.activity_type IN ('send' , 'open')\
+\
+GROUP BY ag.age_bucket;\
+\
+\
+\cf3 4. Given a table of tweet data over a specified time period, calculate the 3-day rolling average of tweets for each user. Output the user ID, tweet date, and rolling averages rounded to 2 decimal places.\
+\cf4 \
+SELECT user_id, tweet_date,\
+\
+ROUND(\
+AVG(tweet_count) OVER (\
+PARTITION BY user_id\
+ORDER BY tweet_date\
+ROWS BETWEEN 2 PRECEDING AND CURRENT ROW), 2) AS rolling_avg\
+\
+FROM tweets;\
+\
+\
+\cf3 5. Assume you're given a table containing data on Amazon customers and their spending on products in different category, write a query to identify the top two highest-grossing products within each category in the year 2022. The output should include the category, product, and total spend.\
+\cf4 \
+SELECT category, product, total_spend\
+FROM(\
+\
+SELECT category, product, SUM(spend) AS total_spend,\
+RANK() OVER(\
+PARTITION BY category\
+ORDER BY SUM(spend) DESC) AS ranking\
+FROM product_spend\
+WHERE EXTRACT(YEAR FROM transaction_date) = 2022\
+GROUP BY category, product\
+) AS ranked_spending\
+\
+WHERE ranking<=2\
+ORDER BY category, ranking;\
+\
+\
 \
 \
 \
